@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.duoc.solitrack"
+    namespace = "com.example.solitrack"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.duoc.solitrack"
+        applicationId = "com.example.solitrack"
         minSdk = 24
         targetSdk = 36
         versionCode = 1

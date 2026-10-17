@@ -1,4 +1,4 @@
-package com.duoc.solitrack.ui.theme
+package com.example.solitrack.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

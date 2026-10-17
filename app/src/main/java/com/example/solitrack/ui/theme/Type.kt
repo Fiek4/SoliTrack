@@ -1,4 +1,4 @@
-package com.duoc.solitrack.ui.theme
+package com.example.solitrack.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

@@ -1,4 +1,4 @@
-package com.duoc.solitrack
+package com.example.solitrack
 
 import org.junit.Test
 
