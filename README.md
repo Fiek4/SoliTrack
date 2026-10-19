@@ -53,17 +53,18 @@ Esta entrega implementa el **módulo de Solicitudes**.
 com.example.solitrack
 ├── MainActivity.kt
 ├── SoliTrackApp.kt
-├── model        → SolicitudEntity, Categoria, EstadoSolicitud,
-│                  SolicitudUiState, LoginUiState
-├── data         → SolicitudDao, AppDatabase (Room)
-├── repository   → SolicitudRepository, AuthRepository
-├── navigation   → AppNavigation
-├── ui
-│   ├── screen     → LoginScreen, MenuScreen,
-│   │                ListaSolicitudesScreen, SolicitudFormScreen
-│   ├── components → EstadoChip, CamaraUtils
-│   └── theme      → Color, Theme, Type
-└── viewmodel    → LoginViewModel, SolicitudViewModel, SolicitudValidator
+├── data
+│   ├── local        → SolicitudEntity, SolicitudDao, AppDatabase (Room)
+│   ├── model        → Categoria, EstadoSolicitud
+│   └── repository   → SolicitudRepository, AuthRepository
+└── ui
+    ├── login        → LoginScreen, LoginUiState, LoginViewModel
+    ├── menu         → MenuScreen
+    ├── solicitud    → ListaSolicitudesScreen, SolicitudFormScreen,
+    │                  SolicitudUiState, SolicitudViewModel, SolicitudValidator
+    ├── navigation   → AppNavigation
+    ├── components   → EstadoChip, CamaraUtils
+    └── theme        → Color, Theme, Type
 ```
 
 ## ▶️ Cómo ejecutar
