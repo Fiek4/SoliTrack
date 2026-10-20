@@ -1,4 +1,4 @@
-package com.example.solitrack.repository
+package com.example.solitrack.data.repository
 
 class AuthRepository {
 
