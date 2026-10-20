@@ -86,6 +86,7 @@ import coil.compose.AsyncImage
 import com.example.solitrack.data.model.Categoria
 import com.example.solitrack.ui.components.CamaraUtils
 import com.example.solitrack.ui.components.EstadoChip
+import com.example.solitrack.ui.components.NotificacionUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -106,9 +107,15 @@ fun SolicitudFormScreen(
         viewModel.iniciarFormulario(solicitudId)
     }
 
-    // Al guardar: se muestra la confirmación animada y luego se vuelve a la lista
+    // Al guardar: notificación local, confirmación animada y luego se vuelve a la lista
     LaunchedEffect(state.guardadoExitosamente) {
         if (state.guardadoExitosamente) {
+            NotificacionUtils.notificarSolicitudGuardada(
+                context = context,
+                codigo = state.codigo,
+                titulo = state.titulo.trim(),
+                esEdicion = state.esEdicion
+            )
             delay(1200)
             onVolver()
         }

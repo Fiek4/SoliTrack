@@ -1,6 +1,9 @@
 package com.example.solitrack.ui.solicitud
 
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,10 +35,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -43,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.solitrack.data.local.SolicitudEntity
 import com.example.solitrack.ui.components.EstadoChip
+import com.example.solitrack.ui.components.NotificacionUtils
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -57,6 +63,18 @@ fun ListaSolicitudesScreen(
 ) {
     // Cada vez que Room emite una lista nueva, esta pantalla se redibuja
     val solicitudes by viewModel.solicitudes.collectAsState()
+
+    // Permiso de notificaciones (Android 13+). Se pide al entrar a la lista;
+    // si el usuario lo rechaza, la app funciona igual pero sin avisos.
+    val context = LocalContext.current
+    val permisoNotificaciones = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
+    LaunchedEffect(Unit) {
+        if (!NotificacionUtils.tienePermiso(context)) {
+            permisoNotificaciones.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 
     Scaffold(
         topBar = {
