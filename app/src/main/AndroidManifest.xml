@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Consumo de la API REST (catálogo de servicios) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <!-- Notificaciones locales (Android 13+ pide este permiso al usuario) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 

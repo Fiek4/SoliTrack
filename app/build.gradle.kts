@@ -67,6 +67,13 @@ dependencies {
 
     // Coil: mostrar la foto de evidencia desde su Uri
     implementation(libs.coil.compose)
+
+    // Retrofit + Gson: consumir la API REST del catálogo de servicios
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+
+    // Corrutinas para las llamadas a la API en segundo plano
+    implementation(libs.kotlinx.coroutines.android)
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4")
 

@@ -1,0 +1,18 @@
+[
+  { "id": 1, "servicio": "Desarrollo de sitio web corporativo", "categoria": "Desarrollo web", "descripcion": "Diseño y construcción de un sitio web institucional" },
+  { "id": 2, "servicio": "Tienda en línea", "categoria": "Desarrollo web", "descripcion": "Sitio con catálogo de productos y carrito de compras" },
+  { "id": 3, "servicio": "Mantenimiento web mensual", "categoria": "Mantenimiento web", "descripcion": "Actualización de sitios, plugins y copias de seguridad" },
+  { "id": 4, "servicio": "Actualización de contenidos", "categoria": "Mantenimiento web", "descripcion": "Cambio de textos, imágenes y secciones del sitio" },
+  { "id": 5, "servicio": "Sitio caído o con error", "categoria": "Incidente técnico", "descripcion": "Diagnóstico y solución de fallas del sitio web" },
+  { "id": 6, "servicio": "Correo que no envía o recibe", "categoria": "Incidente técnico", "descripcion": "Revisión de fallas en el servicio de correo" },
+  { "id": 7, "servicio": "Hosting básico", "categoria": "Hosting", "descripcion": "Alojamiento web para sitios pequeños" },
+  { "id": 8, "servicio": "Hosting empresarial", "categoria": "Hosting", "descripcion": "Alojamiento con mayor capacidad y soporte prioritario" },
+  { "id": 9, "servicio": "Soporte de correo corporativo", "categoria": "Soporte de correo", "descripcion": "Configuración de cuentas de correo del dominio" },
+  { "id": 10, "servicio": "Migración de correos", "categoria": "Soporte de correo", "descripcion": "Traslado de buzones entre proveedores" },
+  { "id": 11, "servicio": "Gestión de redes sociales", "categoria": "Marketing digital", "descripcion": "Publicaciones y campañas en redes sociales" },
+  { "id": 12, "servicio": "Posicionamiento SEO", "categoria": "Marketing digital", "descripcion": "Mejora de la visibilidad del sitio en buscadores" },
+  { "id": 13, "servicio": "Cambio de diseño", "categoria": "Solicitud de cambio", "descripcion": "Modificación de colores, tipografías o estructura" },
+  { "id": 14, "servicio": "Nueva funcionalidad", "categoria": "Solicitud de cambio", "descripcion": "Agregar una sección o función nueva al sitio" },
+  { "id": 15, "servicio": "Acceso al panel administrador", "categoria": "Acceso o configuración", "descripcion": "Recuperación o creación de credenciales de acceso" },
+  { "id": 16, "servicio": "Configuración de dominio", "categoria": "Acceso o configuración", "descripcion": "Apuntar el dominio y configurar registros DNS" }
+]
