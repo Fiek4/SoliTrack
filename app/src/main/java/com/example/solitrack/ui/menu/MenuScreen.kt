@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Inbox
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,6 +41,7 @@ import androidx.compose.ui.unit.dp
 fun MenuScreen(
     usuario: String,
     onIrASolicitudes: () -> Unit,
+    onIrACatalogo: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
     Scaffold(
@@ -85,6 +87,14 @@ fun MenuScreen(
                 descripcion = "Registra, consulta y edita tus solicitudes",
                 habilitada = true,
                 onClick = onIrASolicitudes
+            )
+
+            OpcionMenu(
+                icono = Icons.Filled.Storefront,
+                titulo = "Catálogo de servicios",
+                descripcion = "Servicios desde la API REST (GET, POST, PUT, DELETE)",
+                habilitada = true,
+                onClick = onIrACatalogo
             )
 
             OpcionMenu(
