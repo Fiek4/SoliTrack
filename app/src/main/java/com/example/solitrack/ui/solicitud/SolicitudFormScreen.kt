@@ -33,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Error
@@ -61,6 +62,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -84,6 +86,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.solitrack.data.model.Categoria
+import com.example.solitrack.data.model.Servicio
 import com.example.solitrack.ui.components.CamaraUtils
 import com.example.solitrack.ui.components.EstadoChip
 import com.example.solitrack.ui.components.NotificacionUtils
@@ -244,14 +247,12 @@ fun SolicitudFormScreen(
                 )
 
                 // ---------- Servicio relacionado ----------
-                val requiereServicio = Categoria.desdeEtiqueta(state.categoria)?.requiereServicio == true
-                CampoFormulario(
-                    valor = state.servicio,
+                // Las sugerencias vienen del catálogo de la API REST
+                SelectorServicio(
+                    state = state,
                     onValorChange = viewModel::onServicioChange,
-                    etiqueta = if (requiereServicio) "Servicio o sitio relacionado *" else "Servicio o sitio relacionado",
-                    icono = Icons.Filled.Language,
-                    error = state.servicioError,
-                    ayuda = if (requiereServicio) "Obligatorio para esta categoría (ej: www.miempresa.cl)" else "Opcional"
+                    onSeleccionar = viewModel::onServicioSeleccionado,
+                    onReintentar = viewModel::cargarServicios
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -401,6 +402,120 @@ private fun SelectorCategoria(
                     },
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                 )
+            }
+        }
+    }
+}
+
+// ============================================================
+// Servicio relacionado: se puede escribir o elegir del catálogo
+// que entrega la API REST (filtrado por la categoría elegida).
+// Si la API falla, se muestra el error con "Reintentar" y el
+// campo sigue funcionando como texto libre.
+// ============================================================
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SelectorServicio(
+    state: SolicitudUiState,
+    onValorChange: (String) -> Unit,
+    onSeleccionar: (Servicio) -> Unit,
+    onReintentar: () -> Unit
+) {
+    var expandido by remember { mutableStateOf(false) }
+    val requiereServicio = Categoria.desdeEtiqueta(state.categoria)?.requiereServicio == true
+    val sugerencias = state.serviciosSugeridos
+    val ayuda = when {
+        state.cargandoServicios -> "Cargando catálogo de servicios..."
+        requiereServicio -> "Obligatorio: elige del catálogo o escribe el sitio (ej: www.miempresa.cl)"
+        else -> "Opcional: elige del catálogo o escribe el sitio"
+    }
+
+    Column {
+        ExposedDropdownMenuBox(
+            expanded = expandido && sugerencias.isNotEmpty(),
+            onExpandedChange = { expandido = it }
+        ) {
+            OutlinedTextField(
+                value = state.servicio,
+                onValueChange = {
+                    onValorChange(it)
+                    expandido = true
+                },
+                label = { Text(if (requiereServicio) "Servicio o sitio relacionado *" else "Servicio o sitio relacionado") },
+                leadingIcon = { Icon(Icons.Filled.Language, contentDescription = null) },
+                trailingIcon = {
+                    when {
+                        state.servicioError != null -> Icon(
+                            Icons.Filled.Error,
+                            contentDescription = "Campo con error",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        state.cargandoServicios -> CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                        sugerencias.isNotEmpty() -> ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandido)
+                    }
+                },
+                isError = state.servicioError != null,
+                supportingText = {
+                    AnimatedContent(targetState = state.servicioError ?: ayuda, label = "ayudaServicio") { texto ->
+                        Text(texto)
+                    }
+                },
+                singleLine = true,
+                modifier = Modifier
+                    .menuAnchor(MenuAnchorType.PrimaryEditable)
+                    .fillMaxWidth()
+            )
+
+            ExposedDropdownMenu(
+                expanded = expandido && sugerencias.isNotEmpty(),
+                onDismissRequest = { expandido = false }
+            ) {
+                sugerencias.forEach { servicio ->
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text(servicio.nombre)
+                                Text(
+                                    servicio.descripcion,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        },
+                        onClick = {
+                            onSeleccionar(servicio)
+                            expandido = false
+                        },
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                    )
+                }
+            }
+        }
+
+        // Error al consultar la API: aviso animado + botón para reintentar
+        AnimatedVisibility(
+            visible = state.errorServicios != null,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Filled.CloudOff,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.error
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    state.errorServicios ?: "",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.weight(1f)
+                )
+                TextButton(onClick = onReintentar) { Text("Reintentar") }
             }
         }
     }
