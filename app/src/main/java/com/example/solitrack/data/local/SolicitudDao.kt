@@ -1,6 +1,7 @@
 package com.example.solitrack.data.local
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
@@ -23,6 +24,10 @@ interface SolicitudDao {
 
     @Update
     suspend fun actualizar(solicitud: SolicitudEntity)
+
+    // Room busca la fila por su clave primaria (id) y la borra
+    @Delete
+    suspend fun eliminar(solicitud: SolicitudEntity)
 
     @Query("UPDATE solicitudes SET codigo = :codigo WHERE id = :id")
     suspend fun asignarCodigo(id: Long, codigo: String)

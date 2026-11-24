@@ -151,6 +151,14 @@ class SolicitudViewModel(
         }
     }
 
+    // ---------- ELIMINAR ----------
+    // No hace falta actualizar la lista a mano: Room emite la lista nueva
+    fun eliminar(id: Long) {
+        viewModelScope.launch {
+            repository.eliminar(id)
+        }
+    }
+
     // ---------- FACTORY ----------
     // Le dice a Compose cómo crear este ViewModel entregándole el Repository
     // que vive en SoliTrackApp. Uso: viewModel(factory = SolicitudViewModel.Factory)
