@@ -8,6 +8,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.solitrack.SoliTrackApp
 import com.example.solitrack.data.local.SolicitudEntity
+import com.example.solitrack.data.model.Servicio
+import com.example.solitrack.data.repository.ServicioRepository
 import com.example.solitrack.data.repository.SolicitudRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,7 +20,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class SolicitudViewModel(
-    private val repository: SolicitudRepository
+    private val repository: SolicitudRepository,
+    private val servicioRepository: ServicioRepository
 ) : ViewModel() {
 
     // ---------- LISTA ----------
@@ -46,20 +49,48 @@ class SolicitudViewModel(
     fun iniciarFormulario(id: Long?) {
         if (formularioIniciado) return
         formularioIniciado = true
+
+        // El catálogo de servicios se pide a la API en paralelo a Room
+        cargarServicios()
+
         if (id == null) return
 
         viewModelScope.launch {
             repository.obtenerPorId(id)?.let { solicitud ->
-                _uiState.value = SolicitudUiState(
-                    id = solicitud.id,
-                    codigo = solicitud.codigo,
-                    titulo = solicitud.titulo,
-                    descripcion = solicitud.descripcion,
-                    categoria = solicitud.categoria,
-                    servicio = solicitud.servicio,
-                    evidenciaUri = solicitud.evidenciaUri,
-                    estado = solicitud.estado
-                )
+                // update + copy: así no se pierde el catálogo si llegó antes
+                _uiState.update {
+                    it.copy(
+                        id = solicitud.id,
+                        codigo = solicitud.codigo,
+                        titulo = solicitud.titulo,
+                        descripcion = solicitud.descripcion,
+                        categoria = solicitud.categoria,
+                        servicio = solicitud.servicio,
+                        evidenciaUri = solicitud.evidenciaUri,
+                        estado = solicitud.estado
+                    )
+                }
+            }
+        }
+    }
+
+    // ---------- API REST: CATÁLOGO DE SERVICIOS ----------
+    // cargando -> lista o error. Sin internet la app no se cae:
+    // se muestra el error y el usuario puede escribir el servicio a mano.
+    fun cargarServicios() {
+        _uiState.update { it.copy(cargandoServicios = true, errorServicios = null) }
+
+        viewModelScope.launch {
+            try {
+                val servicios = servicioRepository.obtenerServicios()
+                _uiState.update { it.copy(servicios = servicios, cargandoServicios = false) }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        cargandoServicios = false,
+                        errorServicios = "No se pudo cargar el catálogo de servicios"
+                    )
+                }
             }
         }
     }
@@ -83,6 +114,18 @@ class SolicitudViewModel(
 
     fun onServicioChange(valor: String) {
         _uiState.update { it.copy(servicio = valor, servicioError = null) }
+    }
+
+    // Al elegir un servicio del catálogo; si aún no hay categoría, se completa sola
+    fun onServicioSeleccionado(servicio: Servicio) {
+        _uiState.update {
+            it.copy(
+                servicio = servicio.nombre,
+                servicioError = null,
+                categoria = it.categoria.ifBlank { servicio.categoria },
+                categoriaError = if (it.categoria.isBlank()) null else it.categoriaError
+            )
+        }
     }
 
     fun onEvidenciaCapturada(uri: String) {
@@ -166,7 +209,7 @@ class SolicitudViewModel(
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as SoliTrackApp
-                SolicitudViewModel(app.solicitudRepository)
+                SolicitudViewModel(app.solicitudRepository, app.servicioRepository)
             }
         }
     }
