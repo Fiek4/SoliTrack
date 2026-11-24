@@ -68,6 +68,15 @@ class SolicitudRepository(private val dao: SolicitudDao) {
         )
     }
 
+    /**
+     * Elimina la solicitud. La lista se actualiza sola porque Room
+     * vuelve a emitir el Flow de obtenerTodas().
+     */
+    suspend fun eliminar(id: Long) {
+        val actual = dao.obtenerPorId(id) ?: return
+        dao.eliminar(actual)
+    }
+
     companion object {
         // 1 -> "SOL-0001", 25 -> "SOL-0025"
         fun generarCodigo(id: Long): String = String.format(Locale.ROOT, "SOL-%04d", id)
