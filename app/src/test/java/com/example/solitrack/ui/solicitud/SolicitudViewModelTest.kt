@@ -166,8 +166,8 @@ class SolicitudViewModelTest : StringSpec({
         vm.uiState.value.errorGeneral.shouldBeNull()
         vm.uiState.value.guardadoExitosamente shouldBe true
         vm.uiState.value.codigo shouldBe "SOL-0007"
-        // El último parámetro es el clienteId: debe ser el id del cliente que inició sesión
-        coVerify { repo.crear(any(), any(), any(), any(), any(), 1L) }
+        // El último parámetro es el cliente: debe ser el usuario que inició sesión
+        coVerify { repo.crear(any(), any(), any(), any(), any(), cliente) }
     }
 
     "eliminar le pide al repositorio borrar la solicitud" {

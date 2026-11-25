@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -25,11 +26,14 @@ import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -53,6 +57,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.solitrack.data.local.SolicitudEntity
+import com.example.solitrack.data.model.EstadoSolicitud
+import com.example.solitrack.data.model.Prioridad
 import com.example.solitrack.data.model.Rol
 import com.example.solitrack.ui.components.EstadoChip
 import com.example.solitrack.ui.components.NotificacionUtils
@@ -69,7 +75,9 @@ fun ListaSolicitudesScreen(
     viewModel: SolicitudViewModel = viewModel(factory = SolicitudViewModel.Factory)
 ) {
     // Cada vez que Room emite una lista nueva, esta pantalla se redibuja
-    val solicitudes by viewModel.solicitudes.collectAsState()
+    val todas by viewModel.solicitudes.collectAsState()
+    val solicitudes by viewModel.solicitudesFiltradas.collectAsState()
+    val filtros by viewModel.filtros.collectAsState()
     val usuario by viewModel.usuario.collectAsState()
     val rol = usuario?.rol
 
@@ -158,8 +166,8 @@ fun ListaSolicitudesScreen(
                 }
             }
 
-            // No hay solicitudes guardadas
-            lista.isEmpty() -> {
+            // No hay solicitudes guardadas (sin contar filtros)
+            todas.isNullOrEmpty() -> {
                 ListaVacia(
                     mensaje = when (rol) {
                         Rol.CLIENTE -> "Presiona «Nueva» para registrar tu primera solicitud."
@@ -181,8 +189,19 @@ fun ListaSolicitudesScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     item {
+                        BarraFiltros(
+                            filtros = filtros,
+                            mostrarPrioridad = rol == Rol.ADMINISTRADOR,
+                            onBusqueda = viewModel::onBusquedaChange,
+                            onEstado = viewModel::onFiltroEstado,
+                            onPrioridad = viewModel::onFiltroPrioridad
+                        )
+                    }
+
+                    item {
                         Text(
-                            text = "${lista.size} solicitud(es) registrada(s)",
+                            text = if (filtros.activos) "${lista.size} de ${todas?.size ?: 0} solicitud(es)"
+                            else "${lista.size} solicitud(es) registrada(s)",
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -266,6 +285,16 @@ private fun SolicitudCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
+                solicitud.prioridad?.let {
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        text = "Prioridad $it",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (it == "Alta") MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.primary
+                    )
+                }
+
                 if (solicitud.evidenciaUri != null) {
                     Spacer(Modifier.width(12.dp))
                     Icon(
@@ -282,6 +311,46 @@ private fun SolicitudCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+private fun BarraFiltros(
+    filtros: FiltrosLista,
+    mostrarPrioridad: Boolean,
+    onBusqueda: (String) -> Unit,
+    onEstado: (String) -> Unit,
+    onPrioridad: (String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        OutlinedTextField(
+            value = filtros.busqueda,
+            onValueChange = onBusqueda,
+            label = { Text("Buscar por código o título") },
+            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(EstadoSolicitud.entries) { estado ->
+                FilterChip(
+                    selected = filtros.estado == estado.etiqueta,
+                    onClick = { onEstado(estado.etiqueta) },
+                    label = { Text(estado.etiqueta) }
+                )
+            }
+        }
+        if (mostrarPrioridad) {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(Prioridad.entries) { prioridad ->
+                    FilterChip(
+                        selected = filtros.prioridad == prioridad.etiqueta,
+                        onClick = { onPrioridad(prioridad.etiqueta) },
+                        label = { Text("Prioridad ${prioridad.etiqueta}") }
+                    )
+                }
+            }
         }
     }
 }

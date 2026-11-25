@@ -21,7 +21,7 @@ class SoliTrackApp : Application() {
     val database: AppDatabase by lazy { AppDatabase.getInstance(this) }
 
     val solicitudRepository: SolicitudRepository by lazy {
-        SolicitudRepository(database.solicitudDao())
+        SolicitudRepository(database.solicitudDao(), database.seguimientoDao())
     }
 
     // Usuario que inició sesión (compartido por todas las pantallas)

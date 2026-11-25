@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Storefront
-import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,6 +47,7 @@ fun MenuScreen(
     usuario: UsuarioEntity,
     onIrASolicitudes: () -> Unit,
     onIrACatalogo: () -> Unit,
+    onIrAResumen: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
     Scaffold(
@@ -95,16 +95,9 @@ fun MenuScreen(
                     OpcionMenu(
                         icono = Icons.Filled.Inbox,
                         titulo = "Mis solicitudes",
-                        descripcion = "Registra y revisa el estado de tus solicitudes",
+                        descripcion = "Registra, sigue el estado e historial y comparte por WhatsApp",
                         habilitada = true,
                         onClick = onIrASolicitudes
-                    )
-                    OpcionMenu(
-                        icono = Icons.Filled.Timeline,
-                        titulo = "Seguimiento",
-                        descripcion = "Historial de cambios · Próximamente",
-                        habilitada = false,
-                        onClick = {}
                     )
                 }
 
@@ -126,9 +119,9 @@ fun MenuScreen(
                     OpcionMenu(
                         icono = Icons.Filled.BarChart,
                         titulo = "Resumen",
-                        descripcion = "Panel por estado · Próximamente",
-                        habilitada = false,
-                        onClick = {}
+                        descripcion = "Totales por estado y por prioridad",
+                        habilitada = true,
+                        onClick = onIrAResumen
                     )
                 }
 

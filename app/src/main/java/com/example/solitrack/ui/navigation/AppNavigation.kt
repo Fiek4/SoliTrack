@@ -17,8 +17,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.solitrack.SoliTrackApp
 import com.example.solitrack.ui.catalogo.CatalogoScreen
+import com.example.solitrack.ui.detalle.DetalleSolicitudScreen
 import com.example.solitrack.ui.login.LoginScreen
 import com.example.solitrack.ui.menu.MenuScreen
+import com.example.solitrack.ui.resumen.ResumenScreen
 import com.example.solitrack.ui.solicitud.ListaSolicitudesScreen
 import com.example.solitrack.ui.solicitud.SolicitudFormScreen
 
@@ -27,6 +29,10 @@ object Rutas {
     const val MENU = "menu"
     const val LISTA = "solicitudes"
     const val CATALOGO = "catalogo"
+    const val RESUMEN = "resumen"
+    const val DETALLE = "detalle/{id}"
+
+    fun detalle(id: Long) = "detalle/$id"
     const val FORMULARIO = "formulario?id={id}"
 
     fun formulario(id: Long? = null) =
@@ -97,6 +103,7 @@ fun AppNavigation() {
                     usuario = actual,
                     onIrASolicitudes = { navController.navigate(Rutas.LISTA) },
                     onIrACatalogo = { navController.navigate(Rutas.CATALOGO) },
+                    onIrAResumen = { navController.navigate(Rutas.RESUMEN) },
                     onCerrarSesion = {
                         sesion.cerrar()
                         navController.irAlLogin()
@@ -109,9 +116,28 @@ fun AppNavigation() {
         composable(Rutas.LISTA) {
             ListaSolicitudesScreen(
                 onNuevaSolicitud = { navController.navigate(Rutas.formulario()) },
-                onAbrirSolicitud = { id -> navController.navigate(Rutas.formulario(id)) },
+                // Tocar una solicitud abre su detalle (historial, comentarios y acciones según el rol)
+                onAbrirSolicitud = { id -> navController.navigate(Rutas.detalle(id)) },
                 onVolver = { navController.volverDesde(Rutas.LISTA) }
             )
+        }
+
+        // ---------- DETALLE: historial, comentarios y cambios de estado ----------
+        composable(
+            route = Rutas.DETALLE,
+            arguments = listOf(navArgument("id") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong("id") ?: SIN_ID
+            DetalleSolicitudScreen(
+                solicitudId = id,
+                onVolver = { navController.volverDesde(Rutas.DETALLE) },
+                onEditar = { navController.navigate(Rutas.formulario(it)) }
+            )
+        }
+
+        // ---------- RESUMEN (administrador) ----------
+        composable(Rutas.RESUMEN) {
+            ResumenScreen(onVolver = { navController.volverDesde(Rutas.RESUMEN) })
         }
 
         // ---------- CATÁLOGO DE SERVICIOS (API REST) ----------
