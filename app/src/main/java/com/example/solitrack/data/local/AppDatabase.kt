@@ -6,9 +6,15 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [SolicitudEntity::class, UsuarioEntity::class],
+    entities = [
+        SolicitudEntity::class,
+        UsuarioEntity::class,
+        HistorialEntity::class,
+        ComentarioEntity::class
+    ],
     // v2: tabla usuarios + dueño, técnico y prioridad en solicitudes
-    version = 2,
+    // v3: tablas historial y comentarios
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -16,6 +22,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun solicitudDao(): SolicitudDao
 
     abstract fun usuarioDao(): UsuarioDao
+
+    abstract fun seguimientoDao(): SeguimientoDao
 
     companion object {
         @Volatile

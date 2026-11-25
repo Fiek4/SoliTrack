@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
@@ -53,6 +54,24 @@ class SolicitudViewModel(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = null
         )
+
+    // ---------- FILTROS DE LA LISTA ----------
+    private val _filtros = MutableStateFlow(FiltrosLista())
+    val filtros: StateFlow<FiltrosLista> = _filtros.asStateFlow()
+
+    // Lista que muestra la pantalla: la del rol, filtrada por búsqueda, estado y prioridad
+    val solicitudesFiltradas: StateFlow<List<SolicitudEntity>?> = combine(solicitudes, _filtros) { lista, f ->
+        lista?.filter { f.coincide(it) }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    fun onBusquedaChange(texto: String) = _filtros.update { it.copy(busqueda = texto) }
+
+    // Tocar el filtro activo lo quita (null = todos)
+    fun onFiltroEstado(estado: String) =
+        _filtros.update { it.copy(estado = if (it.estado == estado) null else estado) }
+
+    fun onFiltroPrioridad(prioridad: String) =
+        _filtros.update { it.copy(prioridad = if (it.prioridad == prioridad) null else prioridad) }
 
     // ---------- FORMULARIO ----------
     // Privado y mutable: solo el ViewModel lo cambia
@@ -184,6 +203,8 @@ class SolicitudViewModel(
         viewModelScope.launch {
             try {
                 if (actual.id == null) {
+                    val cliente = sesion.usuario.value
+                        ?: error("No hay sesión iniciada")
                     val codigo = repository.crear(
                         titulo = actual.titulo.trim(),
                         descripcion = actual.descripcion.trim(),
@@ -191,7 +212,7 @@ class SolicitudViewModel(
                         servicio = actual.servicio.trim(),
                         evidenciaUri = actual.evidenciaUri,
                         // La solicitud queda a nombre del cliente que inició sesión
-                        clienteId = sesion.usuario.value?.id ?: 0
+                        cliente = cliente
                     )
                     _uiState.update { it.copy(codigo = codigo) }
                 } else {

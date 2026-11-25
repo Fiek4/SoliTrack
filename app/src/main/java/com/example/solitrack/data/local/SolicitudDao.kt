@@ -26,6 +26,10 @@ interface SolicitudDao {
     @Query("SELECT * FROM solicitudes WHERE id = :id")
     suspend fun obtenerPorId(id: Long): SolicitudEntity?
 
+    // Igual que obtenerPorId pero como Flow: el detalle se redibuja al cambiar el estado
+    @Query("SELECT * FROM solicitudes WHERE id = :id")
+    fun observarPorId(id: Long): Flow<SolicitudEntity?>
+
     // Retorna el id generado para la nueva fila
     @Insert
     suspend fun insertar(solicitud: SolicitudEntity): Long

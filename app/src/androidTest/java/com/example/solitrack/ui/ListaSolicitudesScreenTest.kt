@@ -50,9 +50,9 @@ class ListaSolicitudesScreenTest {
     }
 
     // Sesión iniciada como cliente: ve sus solicitudes, puede crear y eliminar
-    private val sesionCliente = SesionRepository().apply {
-        iniciar(UsuarioEntity(id = 1, usuario = "cliente", clave = "1234", nombre = "Camila Rojas", rol = Rol.CLIENTE))
-    }
+    private val clientePrueba =
+        UsuarioEntity(id = 1, usuario = "cliente", clave = "1234", nombre = "Camila Rojas", rol = Rol.CLIENTE)
+    private val sesionCliente = SesionRepository().apply { iniciar(clientePrueba) }
 
     @Before
     fun setUp() {
@@ -69,7 +69,7 @@ class ListaSolicitudesScreenTest {
         }
 
         db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
-        repository = SolicitudRepository(db.solicitudDao())
+        repository = SolicitudRepository(db.solicitudDao(), db.seguimientoDao())
     }
 
     @After
@@ -101,7 +101,7 @@ class ListaSolicitudesScreenTest {
     @Test
     fun conSolicitudes_muestraCodigoYTitulo() {
         runBlocking {
-            repository.crear("Sitio web caído", "No carga desde la mañana", "Hosting", "Hosting básico", null, clienteId = 1)
+            repository.crear("Sitio web caído", "No carga desde la mañana", "Hosting", "Hosting básico", null, cliente = clientePrueba)
         }
 
         mostrarPantalla()
@@ -114,7 +114,7 @@ class ListaSolicitudesScreenTest {
     @Test
     fun eliminar_confirmandoElDialogo_quitaLaSolicitudDeLaLista() {
         runBlocking {
-            repository.crear("Cambio de logo", "Actualizar el logo del sitio", "Solicitud de cambio", "Cambio de diseño", null, clienteId = 1)
+            repository.crear("Cambio de logo", "Actualizar el logo del sitio", "Solicitud de cambio", "Cambio de diseño", null, cliente = clientePrueba)
         }
         mostrarPantalla()
 
