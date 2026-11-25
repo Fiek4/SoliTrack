@@ -38,6 +38,12 @@ android {
     buildFeatures {
         compose = true
     }
+    // Los tests unitarios corren sobre la plataforma JUnit 5 (necesaria para Kotest)
+    testOptions {
+        unitTests.all {
+            it.useJUnitPlatform()
+        }
+    }
 }
 
 dependencies {
@@ -80,7 +86,16 @@ dependencies {
 
 
 
-    testImplementation(libs.junit)
+    // ---------- Testing unitario (Guía 15) ----------
+    testImplementation(libs.junit)                    // JUnit 4 (tests existentes)
+    testImplementation(libs.junit.jupiter)            // JUnit 5
+    testRuntimeOnly(libs.junit.vintage.engine)        // Ejecuta los tests JUnit 4 sobre JUnit 5
+    testImplementation(libs.kotest.runner.junit5)     // Kotest: estilo StringSpec
+    testImplementation(libs.kotest.assertions.core)   // shouldBe, shouldContain, ...
+    testImplementation(libs.mockk)                    // Objetos simulados (mocks)
+    testImplementation(libs.kotlinx.coroutines.test)  // Probar corrutinas y viewModelScope
+
+    // ---------- Testing de UI en el emulador ----------
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
