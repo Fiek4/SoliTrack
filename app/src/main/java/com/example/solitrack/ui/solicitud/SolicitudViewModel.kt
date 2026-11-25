@@ -8,25 +8,46 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.solitrack.SoliTrackApp
 import com.example.solitrack.data.local.SolicitudEntity
+import com.example.solitrack.data.local.UsuarioEntity
+import com.example.solitrack.data.model.Rol
 import com.example.solitrack.data.model.Servicio
 import com.example.solitrack.data.repository.ServicioRepository
+import com.example.solitrack.data.repository.SesionRepository
 import com.example.solitrack.data.repository.SolicitudRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class SolicitudViewModel(
     private val repository: SolicitudRepository,
-    private val servicioRepository: ServicioRepository
+    private val servicioRepository: ServicioRepository,
+    private val sesion: SesionRepository
 ) : ViewModel() {
 
+    // Usuario que inició sesión: la pantalla lo usa para mostrar/ocultar acciones según el rol
+    val usuario: StateFlow<UsuarioEntity?> = sesion.usuario
+
     // ---------- LISTA ----------
+    // Cada rol ve solicitudes distintas. flatMapLatest cambia de consulta
+    // si cambia el usuario de la sesión.
     // null = todavía cargando desde Room / lista = datos listos
-    val solicitudes: StateFlow<List<SolicitudEntity>?> = repository.obtenerTodas()
+    val solicitudes: StateFlow<List<SolicitudEntity>?> = sesion.usuario
+        .flatMapLatest { usuario ->
+            when (usuario?.rol) {
+                Rol.CLIENTE -> repository.obtenerPorCliente(usuario.id)
+                Rol.TECNICO -> repository.obtenerPorTecnico(usuario.id)
+                Rol.ADMINISTRADOR -> repository.obtenerTodas()
+                null -> flowOf(emptyList())
+            }
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
@@ -168,7 +189,9 @@ class SolicitudViewModel(
                         descripcion = actual.descripcion.trim(),
                         categoria = actual.categoria,
                         servicio = actual.servicio.trim(),
-                        evidenciaUri = actual.evidenciaUri
+                        evidenciaUri = actual.evidenciaUri,
+                        // La solicitud queda a nombre del cliente que inició sesión
+                        clienteId = sesion.usuario.value?.id ?: 0
                     )
                     _uiState.update { it.copy(codigo = codigo) }
                 } else {
@@ -209,7 +232,7 @@ class SolicitudViewModel(
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as SoliTrackApp
-                SolicitudViewModel(app.solicitudRepository, app.servicioRepository)
+                SolicitudViewModel(app.solicitudRepository, app.servicioRepository, app.sesion)
             }
         }
     }

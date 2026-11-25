@@ -54,15 +54,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun LoginScreen(
-    onLoginExitoso: (String) -> Unit,
-    viewModel: LoginViewModel = viewModel()
+    onLoginExitoso: () -> Unit,
+    viewModel: LoginViewModel = viewModel(factory = LoginViewModel.Factory)
 ) {
     val state by viewModel.uiState.collectAsState()
 
     // Cuando el ViewModel indica que el login fue exitoso, se navega
     LaunchedEffect(state.loginExitoso) {
         if (state.loginExitoso) {
-            onLoginExitoso(state.usuario.trim())
+            onLoginExitoso()
             viewModel.onNavegacionRealizada()
         }
     }
@@ -205,7 +205,7 @@ fun LoginScreen(
             Spacer(Modifier.height(24.dp))
 
             Text(
-                text = "Cuenta de prueba: cliente · Contraseña: 1234",
+                text = "Cuentas de prueba: cliente · admin · tecnico\nContraseña: 1234",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center

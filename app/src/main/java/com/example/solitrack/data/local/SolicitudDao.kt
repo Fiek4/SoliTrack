@@ -15,6 +15,14 @@ interface SolicitudDao {
     @Query("SELECT * FROM solicitudes ORDER BY fechaCreacion DESC")
     fun obtenerTodas(): Flow<List<SolicitudEntity>>
 
+    // Cliente: solo las solicitudes que él creó
+    @Query("SELECT * FROM solicitudes WHERE clienteId = :clienteId ORDER BY fechaCreacion DESC")
+    fun obtenerPorCliente(clienteId: Long): Flow<List<SolicitudEntity>>
+
+    // Técnico: solo las que tiene asignadas
+    @Query("SELECT * FROM solicitudes WHERE tecnicoId = :tecnicoId ORDER BY fechaCreacion DESC")
+    fun obtenerPorTecnico(tecnicoId: Long): Flow<List<SolicitudEntity>>
+
     @Query("SELECT * FROM solicitudes WHERE id = :id")
     suspend fun obtenerPorId(id: Long): SolicitudEntity?
 

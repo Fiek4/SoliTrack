@@ -53,6 +53,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.solitrack.data.local.SolicitudEntity
+import com.example.solitrack.data.model.Rol
 import com.example.solitrack.ui.components.EstadoChip
 import com.example.solitrack.ui.components.NotificacionUtils
 import java.text.SimpleDateFormat
@@ -69,6 +70,12 @@ fun ListaSolicitudesScreen(
 ) {
     // Cada vez que Room emite una lista nueva, esta pantalla se redibuja
     val solicitudes by viewModel.solicitudes.collectAsState()
+    val usuario by viewModel.usuario.collectAsState()
+    val rol = usuario?.rol
+
+    // Qué puede hacer cada perfil en esta pantalla
+    val puedeCrear = rol == Rol.CLIENTE
+    val puedeEliminar = rol == Rol.CLIENTE || rol == Rol.ADMINISTRADOR
 
     // Solicitud que el usuario quiere eliminar (null = diálogo cerrado)
     var porEliminar by remember { mutableStateOf<SolicitudEntity?>(null) }
@@ -108,7 +115,15 @@ fun ListaSolicitudesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mis solicitudes") },
+                title = {
+                    Text(
+                        when (rol) {
+                            Rol.ADMINISTRADOR -> "Todas las solicitudes"
+                            Rol.TECNICO -> "Solicitudes asignadas"
+                            else -> "Mis solicitudes"
+                        }
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onVolver) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -117,11 +132,14 @@ fun ListaSolicitudesScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onNuevaSolicitud,
-                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                text = { Text("Nueva") }
-            )
+            // Solo el cliente registra solicitudes nuevas
+            if (puedeCrear) {
+                ExtendedFloatingActionButton(
+                    onClick = onNuevaSolicitud,
+                    icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                    text = { Text("Nueva") }
+                )
+            }
         }
     ) { innerPadding ->
 
@@ -142,7 +160,14 @@ fun ListaSolicitudesScreen(
 
             // No hay solicitudes guardadas
             lista.isEmpty() -> {
-                ListaVacia(modifier = Modifier.padding(innerPadding))
+                ListaVacia(
+                    mensaje = when (rol) {
+                        Rol.CLIENTE -> "Presiona «Nueva» para registrar tu primera solicitud."
+                        Rol.TECNICO -> "Todavía no tienes solicitudes asignadas."
+                        else -> "Los clientes aún no registran solicitudes."
+                    },
+                    modifier = Modifier.padding(innerPadding)
+                )
             }
 
             // Lista de solicitudes
@@ -167,7 +192,8 @@ fun ListaSolicitudesScreen(
                         SolicitudCard(
                             solicitud = solicitud,
                             onClick = { onAbrirSolicitud(solicitud.id) },
-                            onEliminar = { porEliminar = solicitud },
+                            // null = sin botón de eliminar (técnico)
+                            onEliminar = if (puedeEliminar) ({ porEliminar = solicitud }) else null,
                             // Animación: las tarjetas se deslizan al aparecer o reordenarse
                             modifier = Modifier.animateItem()
                         )
@@ -183,7 +209,7 @@ fun ListaSolicitudesScreen(
 private fun SolicitudCard(
     solicitud: SolicitudEntity,
     onClick: () -> Unit,
-    onEliminar: () -> Unit,
+    onEliminar: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(
@@ -207,12 +233,14 @@ private fun SolicitudCard(
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     EstadoChip(estado = solicitud.estado)
-                    IconButton(onClick = onEliminar) {
-                        Icon(
-                            Icons.Filled.Delete,
-                            contentDescription = "Eliminar ${solicitud.codigo}",
-                            tint = MaterialTheme.colorScheme.error
-                        )
+                    if (onEliminar != null) {
+                        IconButton(onClick = onEliminar) {
+                            Icon(
+                                Icons.Filled.Delete,
+                                contentDescription = "Eliminar ${solicitud.codigo}",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
             }
@@ -259,7 +287,7 @@ private fun SolicitudCard(
 }
 
 @Composable
-private fun ListaVacia(modifier: Modifier = Modifier) {
+private fun ListaVacia(mensaje: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -280,7 +308,7 @@ private fun ListaVacia(modifier: Modifier = Modifier) {
         )
         Spacer(Modifier.height(4.dp))
         Text(
-            text = "Presiona «Nueva» para registrar tu primera solicitud.",
+            text = mensaje,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center

@@ -3,7 +3,9 @@ package com.example.solitrack
 import android.app.Application
 import com.example.solitrack.data.local.AppDatabase
 import com.example.solitrack.data.remote.RetrofitInstance
+import com.example.solitrack.data.repository.AuthRepository
 import com.example.solitrack.data.repository.ServicioRepository
+import com.example.solitrack.data.repository.SesionRepository
 import com.example.solitrack.data.repository.SolicitudRepository
 import com.example.solitrack.ui.components.NotificacionUtils
 
@@ -20,6 +22,13 @@ class SoliTrackApp : Application() {
 
     val solicitudRepository: SolicitudRepository by lazy {
         SolicitudRepository(database.solicitudDao())
+    }
+
+    // Usuario que inició sesión (compartido por todas las pantallas)
+    val sesion: SesionRepository by lazy { SesionRepository() }
+
+    val authRepository: AuthRepository by lazy {
+        AuthRepository(database.usuarioDao())
     }
 
     // Catálogo de servicios desde la API REST (Retrofit)

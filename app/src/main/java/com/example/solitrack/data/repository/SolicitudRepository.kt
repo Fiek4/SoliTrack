@@ -10,6 +10,12 @@ class SolicitudRepository(private val dao: SolicitudDao) {
 
     fun obtenerTodas(): Flow<List<SolicitudEntity>> = dao.obtenerTodas()
 
+    fun obtenerPorCliente(clienteId: Long): Flow<List<SolicitudEntity>> =
+        dao.obtenerPorCliente(clienteId)
+
+    fun obtenerPorTecnico(tecnicoId: Long): Flow<List<SolicitudEntity>> =
+        dao.obtenerPorTecnico(tecnicoId)
+
     suspend fun obtenerPorId(id: Long): SolicitudEntity? = dao.obtenerPorId(id)
 
     /**
@@ -20,7 +26,8 @@ class SolicitudRepository(private val dao: SolicitudDao) {
         descripcion: String,
         categoria: String,
         servicio: String,
-        evidenciaUri: String?
+        evidenciaUri: String?,
+        clienteId: Long
     ): String {
         val ahora = System.currentTimeMillis()
 
@@ -30,6 +37,7 @@ class SolicitudRepository(private val dao: SolicitudDao) {
             categoria = categoria,
             servicio = servicio,
             evidenciaUri = evidenciaUri,
+            clienteId = clienteId,
             estado = EstadoSolicitud.RECIBIDA.etiqueta,
             fechaCreacion = ahora,
             fechaActualizacion = ahora
