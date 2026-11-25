@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.solitrack.ui.catalogo.CatalogoScreen
 import com.example.solitrack.ui.login.LoginScreen
 import com.example.solitrack.ui.menu.MenuScreen
 import com.example.solitrack.ui.solicitud.ListaSolicitudesScreen
@@ -21,6 +22,7 @@ object Rutas {
     const val LOGIN = "login"
     const val MENU = "menu/{usuario}"
     const val LISTA = "solicitudes"
+    const val CATALOGO = "catalogo"
     const val FORMULARIO = "formulario?id={id}"
 
     fun menu(usuario: String) = "menu/${Uri.encode(usuario)}"
@@ -86,6 +88,7 @@ fun AppNavigation() {
             MenuScreen(
                 usuario = backStackEntry.arguments?.getString("usuario").orEmpty(),
                 onIrASolicitudes = { navController.navigate(Rutas.LISTA) },
+                onIrACatalogo = { navController.navigate(Rutas.CATALOGO) },
                 onCerrarSesion = {
                     navController.navigate(Rutas.LOGIN) {
                         // Borra todo el historial de navegación
@@ -102,6 +105,11 @@ fun AppNavigation() {
                 onAbrirSolicitud = { id -> navController.navigate(Rutas.formulario(id)) },
                 onVolver = { navController.volverDesde(Rutas.LISTA) }
             )
+        }
+
+        // ---------- CATÁLOGO DE SERVICIOS (API REST) ----------
+        composable(Rutas.CATALOGO) {
+            CatalogoScreen(onVolver = { navController.volverDesde(Rutas.CATALOGO) })
         }
 
         // ---------- FORMULARIO (crear / editar) ----------
