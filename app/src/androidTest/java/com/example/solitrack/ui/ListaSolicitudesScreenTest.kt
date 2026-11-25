@@ -12,9 +12,12 @@ import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.solitrack.data.local.AppDatabase
+import com.example.solitrack.data.local.UsuarioEntity
+import com.example.solitrack.data.model.Rol
 import com.example.solitrack.data.model.Servicio
 import com.example.solitrack.data.remote.ApiService
 import com.example.solitrack.data.repository.ServicioRepository
+import com.example.solitrack.data.repository.SesionRepository
 import com.example.solitrack.data.repository.SolicitudRepository
 import com.example.solitrack.ui.solicitud.ListaSolicitudesScreen
 import com.example.solitrack.ui.solicitud.SolicitudViewModel
@@ -46,6 +49,11 @@ class ListaSolicitudesScreenTest {
         override suspend fun eliminarServicio(id: Int): Response<Unit> = Response.success(Unit)
     }
 
+    // Sesión iniciada como cliente: ve sus solicitudes, puede crear y eliminar
+    private val sesionCliente = SesionRepository().apply {
+        iniciar(UsuarioEntity(id = 1, usuario = "cliente", clave = "1234", nombre = "Camila Rojas", rol = Rol.CLIENTE))
+    }
+
     @Before
     fun setUp() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -70,7 +78,7 @@ class ListaSolicitudesScreenTest {
     }
 
     private fun mostrarPantalla() {
-        val viewModel = SolicitudViewModel(repository, ServicioRepository(apiFalsa))
+        val viewModel = SolicitudViewModel(repository, ServicioRepository(apiFalsa), sesionCliente)
         composeRule.setContent {
             SoliTrackTheme {
                 ListaSolicitudesScreen(
@@ -93,7 +101,7 @@ class ListaSolicitudesScreenTest {
     @Test
     fun conSolicitudes_muestraCodigoYTitulo() {
         runBlocking {
-            repository.crear("Sitio web caído", "No carga desde la mañana", "Hosting", "Hosting básico", null)
+            repository.crear("Sitio web caído", "No carga desde la mañana", "Hosting", "Hosting básico", null, clienteId = 1)
         }
 
         mostrarPantalla()
@@ -106,7 +114,7 @@ class ListaSolicitudesScreenTest {
     @Test
     fun eliminar_confirmandoElDialogo_quitaLaSolicitudDeLaLista() {
         runBlocking {
-            repository.crear("Cambio de logo", "Actualizar el logo del sitio", "Solicitud de cambio", "Cambio de diseño", null)
+            repository.crear("Cambio de logo", "Actualizar el logo del sitio", "Solicitud de cambio", "Cambio de diseño", null, clienteId = 1)
         }
         mostrarPantalla()
 

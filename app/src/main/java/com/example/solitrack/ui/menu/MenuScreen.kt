@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -15,11 +16,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -35,11 +39,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.example.solitrack.data.local.UsuarioEntity
+import com.example.solitrack.data.model.Rol
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MenuScreen(
-    usuario: String,
+    usuario: UsuarioEntity,
     onIrASolicitudes: () -> Unit,
     onIrACatalogo: () -> Unit,
     onCerrarSesion: () -> Unit
@@ -71,47 +77,71 @@ fun MenuScreen(
         ) {
             Column {
                 Text(
-                    text = "Hola, $usuario 👋",
+                    text = "Hola, ${usuario.nombre.substringBefore(" ")} 👋",
                     style = MaterialTheme.typography.headlineMedium
                 )
-                Text(
-                    text = "¿Qué quieres hacer hoy?",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                Spacer(Modifier.height(4.dp))
+                // Etiqueta con el perfil que inició sesión
+                AssistChip(
+                    onClick = {},
+                    label = { Text(usuario.rol.etiqueta) },
+                    leadingIcon = { Icon(Icons.Filled.Badge, contentDescription = null) }
                 )
             }
 
-            OpcionMenu(
-                icono = Icons.Filled.Inbox,
-                titulo = "Solicitudes",
-                descripcion = "Registra, consulta y edita tus solicitudes",
-                habilitada = true,
-                onClick = onIrASolicitudes
-            )
+            // Cada perfil ve opciones distintas (caso 009D)
+            when (usuario.rol) {
+                Rol.CLIENTE -> {
+                    OpcionMenu(
+                        icono = Icons.Filled.Inbox,
+                        titulo = "Mis solicitudes",
+                        descripcion = "Registra y revisa el estado de tus solicitudes",
+                        habilitada = true,
+                        onClick = onIrASolicitudes
+                    )
+                    OpcionMenu(
+                        icono = Icons.Filled.Timeline,
+                        titulo = "Seguimiento",
+                        descripcion = "Historial de cambios · Próximamente",
+                        habilitada = false,
+                        onClick = {}
+                    )
+                }
 
-            OpcionMenu(
-                icono = Icons.Filled.Storefront,
-                titulo = "Catálogo de servicios",
-                descripcion = "Servicios desde la API REST (GET, POST, PUT, DELETE)",
-                habilitada = true,
-                onClick = onIrACatalogo
-            )
+                Rol.ADMINISTRADOR -> {
+                    OpcionMenu(
+                        icono = Icons.Filled.Inbox,
+                        titulo = "Todas las solicitudes",
+                        descripcion = "Revisa, prioriza y asigna las solicitudes",
+                        habilitada = true,
+                        onClick = onIrASolicitudes
+                    )
+                    OpcionMenu(
+                        icono = Icons.Filled.Storefront,
+                        titulo = "Catálogo de servicios",
+                        descripcion = "Servicios desde la API REST (GET, POST, PUT, DELETE)",
+                        habilitada = true,
+                        onClick = onIrACatalogo
+                    )
+                    OpcionMenu(
+                        icono = Icons.Filled.BarChart,
+                        titulo = "Resumen",
+                        descripcion = "Panel por estado · Próximamente",
+                        habilitada = false,
+                        onClick = {}
+                    )
+                }
 
-            OpcionMenu(
-                icono = Icons.Filled.Timeline,
-                titulo = "Seguimiento",
-                descripcion = "Historial de cambios · Próximamente",
-                habilitada = false,
-                onClick = {}
-            )
-
-            OpcionMenu(
-                icono = Icons.Filled.BarChart,
-                titulo = "Resumen",
-                descripcion = "Panel por estado · Próximamente",
-                habilitada = false,
-                onClick = {}
-            )
+                Rol.TECNICO -> {
+                    OpcionMenu(
+                        icono = Icons.Filled.Build,
+                        titulo = "Solicitudes asignadas",
+                        descripcion = "Atiende las solicitudes que te asignaron",
+                        habilitada = true,
+                        onClick = onIrASolicitudes
+                    )
+                }
+            }
         }
     }
 }

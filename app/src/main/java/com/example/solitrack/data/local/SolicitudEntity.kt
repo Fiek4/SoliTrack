@@ -24,6 +24,15 @@ data class SolicitudEntity(
     // Toda solicitud nueva comienza en "Recibida"
     val estado: String = EstadoSolicitud.RECIBIDA.etiqueta,
 
+    // Cliente que creó la solicitud (id de la tabla usuarios)
+    val clienteId: Long = 0,
+
+    // Técnico responsable; null mientras el administrador no la asigne
+    val tecnicoId: Long? = null,
+
+    // Prioridad que define el administrador (Baja, Media, Alta); null = sin definir
+    val prioridad: String? = null,
+
     // Fechas guardadas en milisegundos (System.currentTimeMillis())
     val fechaCreacion: Long,
     val fechaActualizacion: Long

@@ -6,13 +6,16 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [SolicitudEntity::class],
-    version = 1,
+    entities = [SolicitudEntity::class, UsuarioEntity::class],
+    // v2: tabla usuarios + dueño, técnico y prioridad en solicitudes
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun solicitudDao(): SolicitudDao
+
+    abstract fun usuarioDao(): UsuarioDao
 
     companion object {
         @Volatile
@@ -24,7 +27,11 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "solitrack.db"
-                ).build().also { INSTANCE = it }
+                )
+                    // Al subir de versión borra y recrea las tablas (son datos de prueba).
+                    // En una app real se escribiría una Migration para no perder datos.
+                    .fallbackToDestructiveMigration()
+                    .build().also { INSTANCE = it }
             }
         }
     }

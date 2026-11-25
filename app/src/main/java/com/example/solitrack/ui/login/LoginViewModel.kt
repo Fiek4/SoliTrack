@@ -1,8 +1,14 @@
 package com.example.solitrack.ui.login
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.solitrack.SoliTrackApp
 import com.example.solitrack.data.repository.AuthRepository
+import com.example.solitrack.data.repository.SesionRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,7 +17,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
-    private val repository: AuthRepository = AuthRepository()
+    private val repository: AuthRepository,
+    private val sesion: SesionRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -51,13 +58,21 @@ class LoginViewModel(
 
         viewModelScope.launch {
             delay(800) // Simula la espera de un servidor (se ve el indicador de carga)
-            val valido = repository.login(actual.usuario.trim(), actual.clave)
+            try {
+                // Room busca el usuario; si existe, se guarda en la sesión con su rol
+                val usuario = repository.login(actual.usuario.trim(), actual.clave)
 
-            _uiState.update {
-                if (valido) {
-                    it.copy(cargando = false, loginExitoso = true)
-                } else {
-                    it.copy(cargando = false, errorGeneral = "Usuario o contraseña incorrectos")
+                _uiState.update {
+                    if (usuario != null) {
+                        sesion.iniciar(usuario)
+                        it.copy(cargando = false, loginExitoso = true)
+                    } else {
+                        it.copy(cargando = false, errorGeneral = "Usuario o contraseña incorrectos")
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(cargando = false, errorGeneral = "No se pudo iniciar sesión. Intenta nuevamente.")
                 }
             }
         }
@@ -66,5 +81,14 @@ class LoginViewModel(
     // La pantalla avisa que ya navegó, para no volver a navegar al recomponer
     fun onNavegacionRealizada() {
         _uiState.update { it.copy(loginExitoso = false, clave = "") }
+    }
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val app = this[APPLICATION_KEY] as SoliTrackApp
+                LoginViewModel(app.authRepository, app.sesion)
+            }
+        }
     }
 }

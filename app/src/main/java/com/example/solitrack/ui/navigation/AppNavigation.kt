@@ -1,17 +1,21 @@
 package com.example.solitrack.ui.navigation
 
-import android.net.Uri
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.solitrack.SoliTrackApp
 import com.example.solitrack.ui.catalogo.CatalogoScreen
 import com.example.solitrack.ui.login.LoginScreen
 import com.example.solitrack.ui.menu.MenuScreen
@@ -20,12 +24,10 @@ import com.example.solitrack.ui.solicitud.SolicitudFormScreen
 
 object Rutas {
     const val LOGIN = "login"
-    const val MENU = "menu/{usuario}"
+    const val MENU = "menu"
     const val LISTA = "solicitudes"
     const val CATALOGO = "catalogo"
     const val FORMULARIO = "formulario?id={id}"
-
-    fun menu(usuario: String) = "menu/${Uri.encode(usuario)}"
 
     fun formulario(id: Long? = null) =
         if (id == null) "formulario" else "formulario?id=$id"
@@ -37,6 +39,10 @@ private const val SIN_ID = -1L
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+
+    // Sesión compartida: quién inició sesión y con qué rol
+    val sesion = (LocalContext.current.applicationContext as SoliTrackApp).sesion
+    val usuario by sesion.usuario.collectAsState()
 
     NavHost(
         navController = navController,
@@ -71,8 +77,8 @@ fun AppNavigation() {
         // ---------- LOGIN ----------
         composable(Rutas.LOGIN) {
             LoginScreen(
-                onLoginExitoso = { usuario ->
-                    navController.navigate(Rutas.menu(usuario)) {
+                onLoginExitoso = {
+                    navController.navigate(Rutas.MENU) {
                         // Al presionar "atrás" en el menú no se vuelve al login
                         popUpTo(Rutas.LOGIN) { inclusive = true }
                     }
@@ -81,21 +87,22 @@ fun AppNavigation() {
         }
 
         // ---------- MENÚ ----------
-        composable(
-            route = Rutas.MENU,
-            arguments = listOf(navArgument("usuario") { type = NavType.StringType })
-        ) { backStackEntry ->
-            MenuScreen(
-                usuario = backStackEntry.arguments?.getString("usuario").orEmpty(),
-                onIrASolicitudes = { navController.navigate(Rutas.LISTA) },
-                onIrACatalogo = { navController.navigate(Rutas.CATALOGO) },
-                onCerrarSesion = {
-                    navController.navigate(Rutas.LOGIN) {
-                        // Borra todo el historial de navegación
-                        popUpTo(navController.graph.id) { inclusive = true }
+        composable(Rutas.MENU) {
+            val actual = usuario
+            if (actual == null) {
+                // Sin sesión (ej: Android cerró la app en segundo plano) -> volver al login
+                LaunchedEffect(Unit) { navController.irAlLogin() }
+            } else {
+                MenuScreen(
+                    usuario = actual,
+                    onIrASolicitudes = { navController.navigate(Rutas.LISTA) },
+                    onIrACatalogo = { navController.navigate(Rutas.CATALOGO) },
+                    onCerrarSesion = {
+                        sesion.cerrar()
+                        navController.irAlLogin()
                     }
-                }
-            )
+                )
+            }
         }
 
         // ---------- LISTA DE SOLICITUDES ----------
@@ -129,6 +136,13 @@ fun AppNavigation() {
                 onVolver = { navController.volverDesde(Rutas.FORMULARIO) }
             )
         }
+    }
+}
+
+// Va al login borrando todo el historial de navegación
+private fun NavController.irAlLogin() {
+    navigate(Rutas.LOGIN) {
+        popUpTo(graph.id) { inclusive = true }
     }
 }
 
